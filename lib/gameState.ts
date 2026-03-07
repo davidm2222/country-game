@@ -10,6 +10,7 @@ const DEFAULT_STATE: GameState = {
   currentPlayer: 1,
   round: 1,
   firstPlayer: 1,
+  mode: 'classic',
 };
 
 export function getGameState(): GameState {

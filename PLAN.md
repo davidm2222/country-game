@@ -18,7 +18,14 @@
 - [x] Reveal screen (winner banner + world map + breakdown)
 - [x] WorldMap component (react-simple-maps, color-coded)
 - [ ] Polish: animations, mobile keyboard handling
-- [ ] Tuning: fuzzy match threshold
+- [x] Tuning: fuzzy match threshold (raised to 0.1, removed suggestion tier, beefed up alias list)
+- [x] New countries prepended to top of list (not appended to bottom)
+- [x] Color scheme — "Both" changed from violet to green (#22c55e) for clearer distinction from P1 blue
+- [x] Map coverage audit — territory→parent mapping (Greenland→Denmark, French territories→France, etc.)
+- [x] Reveal map — two-column desktop layout (map left, breakdown + buttons right; max-w-5xl)
+- [x] Dark mode — prefers-color-scheme media query + dark: Tailwind variants on all screens
+- [x] Reveal screen — "Neither named" collapsible expander (continent-aware, collapsed by default)
+- [x] Game modes: Timed (adjustable timer) and Continent Sprint implemented
 
 ---
 
@@ -78,7 +85,8 @@
 ### 2.3 Map Coloring
 - Uses `https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json`
 - `geo.id` (numeric) matched against `isoN` in country list
-- Colors: Player 1 = blue (#3b82f6), Player 2 = orange (#f97316), Both = purple (#8b5cf6), Neither = #e5e7eb
+- Colors: Player 1 = blue (#3b82f6), Player 2 = orange (#f97316), Both = green (#22c55e), Neither = #e5e7eb (light) / #374151 (dark)
+- Dark mode: neither/outOfScope fills adapt reactively via matchMedia listener in WorldMap
 
 ---
 
@@ -129,7 +137,7 @@
 - [x] Winner banner ("X wins! 47 vs 31" or "It's a tie!")
 - [x] Color-coded world map (react-simple-maps)
 - [x] Legend with player names
-- [x] Breakdown lists (both / only P1 / only P2 / neither)
+- [x] Breakdown lists (both / only P1 / only P2 / neither) — all collapsible, "neither" collapsed by default
 - [x] Rematch button (pre-fills names, swaps turn order)
 - [x] New Game button (clears everything)
 
@@ -150,12 +158,59 @@
 
 ## 6. Open Questions / Future Work
 
-- [ ] Fuzzy threshold tuning — needs real user testing ("Brzil" yes, "Borzil" no)
+### 6.1 Fuzzy Matching — Suggestion Quality ✓ RESOLVED
+**Solution:** Removed the suggestion tier entirely. Auto-accept threshold raised from 0.05 to 0.1. Anything above 0.1 is a hard reject. Alias list beefed up to cover Scotland, Wales, Northern Ireland, Greenland, Faroe Islands, Hong Kong, Macau, French/Dutch territories, and more. Bad aliases removed (borneo for Brunei, laois for Laos).
+
+### 6.2 Reveal Map — Size on Desktop ✓ RESOLVED
+**Solution:** Two-column layout on md+ screens — map (flex-3) on left, breakdown lists + buttons (flex-2) on right. Mobile stacked layout unchanged. Max width expanded to max-w-5xl.
+
+### 6.3 Country List — UK and Constituent Countries ✓ RESOLVED
+Added Scotland, Wales, Northern Ireland, and NI as aliases for United Kingdom (Option 1 — alias approach). Hong Kong and Macau added as aliases for China. Puerto Rico remains a standalone entry.
+- France vs French Guiana / Martinique / Réunion
+- Denmark vs Greenland vs Faroe Islands
+- Netherlands vs Aruba / Curaçao
+
+### 6.4 Player Turn UX — List Ordering
+**Problem observed:** New countries are appended to the bottom of the running list. On mobile, the list grows downward and the player has to scroll to see their latest entry.
+
+**Fix:** Prepend new countries to the top of the list so the most recent entry is always visible without scrolling.
+
+### 6.5 Map Coverage — Territory-to-Country Mapping ✓ RESOLVED
+**Solution:** Added `TERRITORY_TO_PARENT` lookup in `WorldMap.tsx`. `getColor` resolves any territory isoN to its parent before checking player sets and continent scope. Mappings: Greenland/Faroe Islands→Denmark, French Guiana/Guadeloupe/Martinique/Réunion/Mayotte/French Polynesia/New Caledonia→France, Aruba/Curaçao→Netherlands, Hong Kong/Macau→China.
+
+### 6.6 Dark Mode ✓ RESOLVED
+- `prefers-color-scheme` media query in `globals.css` sets dark background/foreground CSS variables
+- `dark:` Tailwind variants applied to all screens (Start, Play, Reveal)
+- WorldMap detects dark mode via `matchMedia` listener; `neither` and `outOfScope` fills adapt reactively
+
+### 6.7 Reveal Screen — "Neither" Country Expander ✓ RESOLVED
+- 4th collapsible `BreakdownSection` added: "Neither named"
+- Continent-aware: in Continent Sprint mode, only shows countries from the selected continent
+- Collapsed by default; "Both named" opens by default
+
+### 6.8 Game Modes ✓ PARTIALLY IMPLEMENTED
+
+**Implemented:**
+- **Timed** — adjustable timer per player (1/2/3/5 min presets, 2 min default). Countdown in header, color shifts orange at 30s, red at 10s, auto-ends turn at 0. Mode and timer duration persist through rematch.
+- **Continent Sprint** — pick a continent before the game; only countries on that continent accepted. Continents: Africa, Asia, Europe, N & C America (North + Central), S America & Caribbean (South America + all Caribbean including Bahamas). Map grays out out-of-scope countries with a distinct "Not in play" color.
+
+**Continent data notes:**
+- `'North America'` = Canada, USA, Mexico + 7 Central American countries (10 total)
+- `'South America'` = 12 South American countries + 14 Caribbean nations incl. Bahamas (26 total)
+- Turkey tagged as Europe; Georgia/Armenia/Azerbaijan tagged as Asia
+
+**Still to explore (gather player feedback first):**
+| Mode | Description |
+|------|-------------|
+| **Head-to-Head Live** | (v2) Both players simultaneously; first to name claims it. |
+| **Capital Cities** | Name capitals instead of countries. |
+| **Streak Mode** | Players alternate one at a time; wrong answer ends streak. |
+
+### 6.9 Other Future Work
 - [ ] Reveal animation — dramatic pop-in of countries on the map (v2)
 - [ ] Mobile keyboard handling — ensure list stays visible with keyboard open
-- [ ] Timer (v2 feature)
 - [ ] Online multiplayer (v2)
-- [ ] Small island nation visibility on 110m map (may not render)
+- [ ] Small island nation visibility on 110m map (may not render for tiny Pacific islands)
 
 ---
 

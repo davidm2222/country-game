@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { getGameState, setGameState, otherPlayer, clearGameState } from '@/lib/gameState';
+import { COUNTRIES } from '@/lib/countries';
 import { GameState } from '@/types';
 
 // Load WorldMap client-side only (react-simple-maps uses browser APIs)
@@ -31,6 +32,14 @@ export default function RevealPage() {
   const onlyP1 = p1c.filter(c => !p2Set.has(c)).sort();
   const onlyP2 = p2c.filter(c => !p1Set.has(c)).sort();
 
+  const allCountries = state.continent
+    ? COUNTRIES.filter(c => c.continent === state.continent)
+    : COUNTRIES;
+  const neitherList = allCountries
+    .map(c => c.name)
+    .filter(n => !p1Set.has(n) && !p2Set.has(n))
+    .sort();
+
   const p1Score = p1c.length;
   const p2Score = p2c.length;
   const winner = p1Score > p2Score ? p1 : p2Score > p1Score ? p2 : null;
@@ -44,6 +53,7 @@ export default function RevealPage() {
       currentPlayer: newFirst,
       round: 1,
       firstPlayer: newFirst,
+      // mode, timerSeconds, continent carry over automatically via setGameState merge
     });
     router.push('/play');
   }
@@ -58,16 +68,16 @@ export default function RevealPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 pb-8">
+    <div className="min-h-dvh bg-gray-50 dark:bg-gray-900 pb-8">
       {/* Winner banner */}
-      <div className={`px-6 pt-8 pb-6 text-center ${winner ? 'bg-white border-b border-gray-100' : 'bg-white border-b border-gray-100'}`}>
+      <div className="px-6 pt-8 pb-6 text-center bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
         {winner ? (
           <>
             <div className="text-4xl mb-2">🏆</div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {winner} wins!
             </h1>
-            <p className="mt-1 text-lg text-gray-500">
+            <p className="mt-1 text-lg text-gray-500 dark:text-gray-400">
               <span className={p1Wins ? 'font-bold text-blue-600' : ''}>{p1Score}</span>
               {' '}vs{' '}
               <span className={!p1Wins ? 'font-bold text-orange-600' : ''}>{p2Score}</span>
@@ -77,68 +87,82 @@ export default function RevealPage() {
         ) : (
           <>
             <div className="text-4xl mb-2">🤝</div>
-            <h1 className="text-2xl font-bold text-gray-900">It&apos;s a tie!</h1>
-            <p className="mt-1 text-lg text-gray-500">{p1Score} countries each</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">It&apos;s a tie!</h1>
+            <p className="mt-1 text-lg text-gray-500 dark:text-gray-400">{p1Score} countries each</p>
           </>
         )}
       </div>
 
-      {/* Score cards */}
-      <div className="flex gap-3 px-4 pt-4 max-w-lg mx-auto">
+      {/* Score cards — full width on mobile, constrained on desktop */}
+      <div className="flex gap-3 px-4 pt-4 max-w-lg mx-auto md:max-w-5xl">
         <ScoreCard name={p1} score={p1Score} color="blue" isWinner={p1Score > p2Score} />
         <ScoreCard name={p2} score={p2Score} color="orange" isWinner={p2Score > p1Score} />
       </div>
 
-      {/* World map */}
-      <div className="mt-4 mx-4 bg-white rounded-2xl p-4 max-w-lg mx-auto shadow-sm">
-        <WorldMap p1Countries={p1c} p2Countries={p2c} p1Name={p1} p2Name={p2} />
-      </div>
+      {/* Two-column layout on desktop */}
+      <div className="mt-4 px-4 max-w-5xl mx-auto md:flex md:gap-4 md:items-start">
 
-      {/* Breakdown sections */}
-      <div className="mt-4 mx-4 max-w-lg mx-auto space-y-2">
-        <BreakdownSection
-          id="both"
-          title={`Both named`}
-          count={bothList.length}
-          countries={bothList}
-          color="violet"
-          isOpen={openSection === 'both'}
-          onToggle={() => toggleSection('both')}
-        />
-        <BreakdownSection
-          id="p1"
-          title={`Only ${p1}`}
-          count={onlyP1.length}
-          countries={onlyP1}
-          color="blue"
-          isOpen={openSection === 'p1'}
-          onToggle={() => toggleSection('p1')}
-        />
-        <BreakdownSection
-          id="p2"
-          title={`Only ${p2}`}
-          count={onlyP2.length}
-          countries={onlyP2}
-          color="orange"
-          isOpen={openSection === 'p2'}
-          onToggle={() => toggleSection('p2')}
-        />
-      </div>
+        {/* Left col: map */}
+        <div className="md:flex-[3] bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+          <WorldMap p1Countries={p1c} p2Countries={p2c} p1Name={p1} p2Name={p2} continent={state.continent} />
+        </div>
 
-      {/* Action buttons */}
-      <div className="mt-6 px-4 max-w-lg mx-auto flex flex-col gap-3">
-        <button
-          onClick={handleRematch}
-          className="w-full py-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-lg"
-        >
-          Rematch ({p2} goes first)
-        </button>
-        <button
-          onClick={handleNewGame}
-          className="w-full py-4 rounded-xl font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all text-lg"
-        >
-          New Game
-        </button>
+        {/* Right col: breakdown + buttons */}
+        <div className="md:flex-[2] mt-4 md:mt-0 space-y-2">
+          <BreakdownSection
+            id="both"
+            title={`Both named`}
+            count={bothList.length}
+            countries={bothList}
+            color="green"
+            isOpen={openSection === 'both'}
+            onToggle={() => toggleSection('both')}
+          />
+          <BreakdownSection
+            id="p1"
+            title={`Only ${p1}`}
+            count={onlyP1.length}
+            countries={onlyP1}
+            color="blue"
+            isOpen={openSection === 'p1'}
+            onToggle={() => toggleSection('p1')}
+          />
+          <BreakdownSection
+            id="p2"
+            title={`Only ${p2}`}
+            count={onlyP2.length}
+            countries={onlyP2}
+            color="orange"
+            isOpen={openSection === 'p2'}
+            onToggle={() => toggleSection('p2')}
+          />
+          <BreakdownSection
+            id="neither"
+            title="Neither named"
+            count={neitherList.length}
+            countries={neitherList}
+            color="gray"
+            isOpen={openSection === 'neither'}
+            onToggle={() => toggleSection('neither')}
+          />
+
+          {/* Action buttons */}
+          <div className="pt-2 flex flex-col gap-3">
+            <button
+              onClick={handleRematch}
+              className="w-full py-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-lg"
+            >
+              Rematch ({p2} goes first)
+            </button>
+            <button
+              onClick={handleNewGame}
+              className="w-full py-4 rounded-xl font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all text-lg"
+            >
+              New Game
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -156,8 +180,8 @@ function ScoreCard({
   isWinner: boolean;
 }) {
   const colorMap = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-600',
-    orange: 'bg-orange-50 border-orange-200 text-orange-600',
+    blue: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-600',
+    orange: 'bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700 text-orange-600',
   };
   return (
     <div className={`flex-1 rounded-xl border-2 p-4 text-center ${colorMap[color]} ${isWinner ? 'ring-2 ring-offset-1 ring-current' : ''}`}>
@@ -181,34 +205,39 @@ function BreakdownSection({
   title: string;
   count: number;
   countries: string[];
-  color: 'blue' | 'orange' | 'violet';
+  color: 'blue' | 'orange' | 'green' | 'gray';
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  const dotColor = { blue: 'bg-blue-500', orange: 'bg-orange-500', violet: 'bg-violet-500' }[color];
+  const dotColor = {
+    blue: 'bg-blue-500',
+    orange: 'bg-orange-500',
+    green: 'bg-green-500',
+    gray: 'bg-gray-400',
+  }[color];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
       <button
         className="w-full flex items-center justify-between px-4 py-3 text-left"
         onClick={onToggle}
       >
         <div className="flex items-center gap-2">
           <div className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
-          <span className="font-medium text-gray-900">{title}</span>
-          <span className="text-sm text-gray-400">({count})</span>
+          <span className="font-medium text-gray-900 dark:text-white">{title}</span>
+          <span className="text-sm text-gray-400">{`(${count})`}</span>
         </div>
         <span className="text-gray-400 text-sm">{isOpen ? '▲' : '▼'}</span>
       </button>
 
       {isOpen && (
-        <div className="px-4 pb-4 border-t border-gray-50">
+        <div className="px-4 pb-4 border-t border-gray-50 dark:border-gray-700">
           {count === 0 ? (
             <p className="text-sm text-gray-400 pt-3">None</p>
           ) : (
             <div className="flex flex-wrap gap-2 pt-3">
               {countries.map(c => (
-                <span key={c} className="text-sm bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg">
+                <span key={c} className="text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2.5 py-1 rounded-lg">
                   {c}
                 </span>
               ))}

@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js';
 import { COUNTRIES, COUNTRY_BY_NAME } from './countries';
-import { Country, MatchResult } from '@/types';
+import { Continent, Country, MatchResult } from '@/types';
 
 // Build a flat list of searchable entries: each alias/name maps back to its country.
 // This lets Fuse.js score individual alias strings rather than arrays.
@@ -24,14 +24,14 @@ const fuse = new Fuse(searchEntries, {
 
 /**
  * Attempt to match a user's input to a country.
- * - exact (score < 0.05): high confidence, auto-add
- * - suggestion (score 0.05–0.4): show "Did you mean X?"
+ * - exact (score < 0.1): high confidence, auto-add
  * - duplicate: already in the player's list
  * - none: no acceptable match
  */
 export function matchCountry(
   input: string,
-  alreadyEntered: string[]
+  alreadyEntered: string[],
+  continent?: Continent
 ): MatchResult {
   const trimmed = input.trim();
   if (!trimmed) return { type: 'none' };
@@ -39,6 +39,7 @@ export function matchCountry(
   // Check for exact match first (case-insensitive) before fuzzy search
   const exactByName = COUNTRY_BY_NAME.get(trimmed.toLowerCase());
   if (exactByName) {
+    if (continent && exactByName.continent !== continent) return { type: 'none' };
     if (alreadyEntered.includes(exactByName.name)) {
       return { type: 'duplicate', country: exactByName };
     }
@@ -52,16 +53,14 @@ export function matchCountry(
   const score = best.score ?? 1;
   const country = best.item.country;
 
+  if (continent && country.continent !== continent) return { type: 'none' };
+
   if (alreadyEntered.includes(country.name)) {
     return { type: 'duplicate', country };
   }
 
-  if (score < 0.05) {
+  if (score < 0.1) {
     return { type: 'exact', country };
-  }
-
-  if (score <= 0.4) {
-    return { type: 'suggestion', country };
   }
 
   return { type: 'none' };
