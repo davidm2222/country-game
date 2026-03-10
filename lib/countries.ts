@@ -40,7 +40,7 @@ export const countries: Country[] = [
   { name: 'Mali', iso3: 'MLI', isoN: 466, continent: 'Africa', aliases: ['mali republic', 'republic of mali'] },
   { name: 'Mauritania', iso3: 'MRT', isoN: 478, continent: 'Africa', aliases: ['mauritanie', 'mauritanea'] },
   { name: 'Mauritius', iso3: 'MUS', isoN: 480, continent: 'Africa', aliases: ['isle of mauritius', 'mauricio'] },
-  { name: 'Morocco', iso3: 'MAR', isoN: 504, continent: 'Africa', aliases: ['marocco', 'maroc', 'marruecos', 'morrocco', 'morroco', 'moroco'] },
+  { name: 'Morocco', iso3: 'MAR', isoN: 504, continent: 'Africa', aliases: ['marocco', 'maroc', 'marruecos', 'morrocco', 'morroco', 'moroco', 'western sahara', 'western sahara territory', 'sahara', 'sahrawi'] },
   { name: 'Mozambique', iso3: 'MOZ', isoN: 508, continent: 'Africa', aliases: ['mocambique', 'moçambique', 'mozambik'] },
   { name: 'Namibia', iso3: 'NAM', isoN: 516, continent: 'Africa', aliases: ['south west africa', 'namibia republic'] },
   { name: 'Niger', iso3: 'NER', isoN: 562, continent: 'Africa', aliases: ['niger republic', 'nijer'] },
@@ -60,7 +60,6 @@ export const countries: Country[] = [
   { name: 'Uganda', iso3: 'UGA', isoN: 800, continent: 'Africa', aliases: ['uganda republic'] },
   { name: 'Zambia', iso3: 'ZMB', isoN: 894, continent: 'Africa', aliases: ['northern rhodesia', 'zambiа'] },
   { name: 'Zimbabwe', iso3: 'ZWE', isoN: 716, continent: 'Africa', aliases: ['rhodesia', 'zimbabe', 'zimbabwae'] },
-  { name: 'Western Sahara', iso3: 'ESH', isoN: 732, continent: 'Africa', aliases: ['sahara', 'western sahara territory', 'sahrawi'] },
 
   // ─── Asia ─────────────────────────────────────────────────────────────────
   { name: 'Afghanistan', iso3: 'AFG', isoN: 4, continent: 'Asia', aliases: ['afganistan', 'afghnistan', 'afganisthan'] },
@@ -71,7 +70,9 @@ export const countries: Country[] = [
   { name: 'Bhutan', iso3: 'BTN', isoN: 64, continent: 'Asia', aliases: ['druk yul', 'butan', 'bhuthan'] },
   { name: 'Brunei', iso3: 'BRN', isoN: 96, continent: 'Asia', aliases: ['brunei darussalam', 'brunei darussalem'] },
   { name: 'Cambodia', iso3: 'KHM', isoN: 116, continent: 'Asia', aliases: ['kampuchea', 'cambodia kingdom', 'cambioda', 'camboda'] },
-  { name: 'China', iso3: 'CHN', isoN: 156, continent: 'Asia', aliases: ["people's republic of china", 'prc', 'zhongguo', 'chine', 'cina', 'hong kong', 'hongkong', 'macau', 'macao'] },
+  { name: 'China', iso3: 'CHN', isoN: 156, continent: 'Asia', aliases: ["people's republic of china", 'prc', 'zhongguo', 'chine', 'cina'] },
+  { name: 'Hong Kong', iso3: 'HKG', isoN: 344, continent: 'Asia', aliases: ['hongkong', 'hk', 'hong kong sar', 'hksar'] },
+  { name: 'Macau', iso3: 'MAC', isoN: 446, continent: 'Asia', aliases: ['macao', 'macau sar', 'aomen'] },
   { name: 'Georgia', iso3: 'GEO', isoN: 268, continent: 'Asia', aliases: ['sakartvelo', 'gruziya', 'georgia republic'] },
   { name: 'India', iso3: 'IND', isoN: 356, continent: 'Asia', aliases: ['bharat', 'hindustan', 'indea'] },
   { name: 'Indonesia', iso3: 'IDN', isoN: 360, continent: 'Asia', aliases: ['indonesea', 'indonesia republic', 'indonasia'] },
@@ -170,7 +171,7 @@ export const countries: Country[] = [
   { name: 'Mexico', iso3: 'MEX', isoN: 484, continent: 'North America', aliases: ['méxico', 'mejico', 'mexiko', 'mexcio'] },
   { name: 'Nicaragua', iso3: 'NIC', isoN: 558, continent: 'North America', aliases: ['nicarague', 'nicaaragua'] },
   { name: 'Panama', iso3: 'PAN', isoN: 591, continent: 'North America', aliases: ['panana', 'panaма'] },
-  { name: 'United States', iso3: 'USA', isoN: 840, continent: 'North America', aliases: ['usa', 'us', 'america', 'united states of america', 'the us', 'the usa', 'us of america'] },
+  { name: 'United States', iso3: 'USA', isoN: 840, continent: 'North America', aliases: ['usa', 'us', 'america', 'united states of america', 'the us', 'the usa', 'us of america', 'puerto rico', 'puerto rico island', 'pr', 'puertro rico'] },
 
   // ─── South America & Caribbean ────────────────────────────────────────────
   { name: 'Antigua and Barbuda', iso3: 'ATG', isoN: 28, continent: 'South America', aliases: ['antigua', 'antigua & barbuda', 'antiguaand barbuda'] },
@@ -191,7 +192,6 @@ export const countries: Country[] = [
   { name: 'Jamaica', iso3: 'JAM', isoN: 388, continent: 'South America', aliases: ['jamica', 'jamaiка', 'jamaicа'] },
   { name: 'Paraguay', iso3: 'PRY', isoN: 600, continent: 'South America', aliases: ['paraguey', 'paraguy'] },
   { name: 'Peru', iso3: 'PER', isoN: 604, continent: 'South America', aliases: ['perú', 'piru', 'peru republic'] },
-  { name: 'Puerto Rico', iso3: 'PRI', isoN: 630, continent: 'South America', aliases: ['puerto rico island', 'pr', 'puertro rico'] },
   { name: 'Saint Kitts and Nevis', iso3: 'KNA', isoN: 659, continent: 'South America', aliases: ['st kitts', 'st kitts and nevis', 'saint kitts', 'st kitts nevis', 'saint kitts nevis'] },
   { name: 'Saint Lucia', iso3: 'LCA', isoN: 662, continent: 'South America', aliases: ['st lucia', 'sainte lucie', 'st. lucia'] },
   { name: 'Saint Vincent and the Grenadines', iso3: 'VCT', isoN: 670, continent: 'South America', aliases: ['st vincent', 'saint vincent', 'st vincent and grenadines', 'st. vincent'] },
