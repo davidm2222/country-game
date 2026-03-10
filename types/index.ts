@@ -28,4 +28,5 @@ export interface GameState {
 export type MatchResult =
   | { type: 'exact'; country: Country }
   | { type: 'duplicate'; country: Country }
+  | { type: 'out_of_scope'; country: Country }
   | { type: 'none' };

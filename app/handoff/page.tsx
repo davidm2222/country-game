@@ -38,7 +38,7 @@ export default function HandoffPage() {
             Great job, {justFinished}!
           </h1>
           <p className="mt-3 text-lg text-gray-300">
-            Pass the phone to <span className="font-bold text-white">{upNext}</span>.
+            Hand it to <span className="font-bold text-white">{upNext}</span>.
           </p>
           <p className="mt-2 text-sm text-gray-500">No peeking at the screen!</p>
         </div>

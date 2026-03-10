@@ -23,6 +23,7 @@ export default function PlayPage() {
   const [highlightDup, setHighlightDup] = useState<string | null>(null);
   const [shaking, setShaking] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleDoneRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -39,6 +40,12 @@ export default function PlayPage() {
   const triggerShake = useCallback(() => {
     setShaking(true);
     setTimeout(() => setShaking(false), 450);
+  }, []);
+
+  const showFeedback = useCallback((result: MatchResult) => {
+    setFeedback(result);
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setFeedback(null), 2000);
   }, []);
 
   // Timer countdown — auto-ends turn when it hits 0
@@ -58,7 +65,6 @@ export default function PlayPage() {
 
     const continent = state?.mode === 'continent' ? state.continent : undefined;
     const result = matchCountry(trimmed, countries, continent);
-    setFeedback(result);
 
     if (result.type === 'exact') {
       const updated = [result.country.name, ...countries];
@@ -72,6 +78,7 @@ export default function PlayPage() {
       setFeedback(null);
       triggerShake();
     } else {
+      showFeedback(result);
       triggerShake();
     }
   }
@@ -164,6 +171,11 @@ export default function PlayPage() {
         <div className="mt-2 min-h-[2rem]">
           {feedback?.type === 'none' && (
             <p className="text-sm text-red-500">Not recognized — try again</p>
+          )}
+          {feedback?.type === 'out_of_scope' && (
+            <p className="text-sm text-orange-500">
+              {feedback.country.name} is in {feedback.country.continent}, not {state.continent}
+            </p>
           )}
         </div>
       </div>

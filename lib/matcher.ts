@@ -39,7 +39,7 @@ export function matchCountry(
   // Check for exact match first (case-insensitive) before fuzzy search
   const exactByName = COUNTRY_BY_NAME.get(trimmed.toLowerCase());
   if (exactByName) {
-    if (continent && exactByName.continent !== continent) return { type: 'none' };
+    if (continent && exactByName.continent !== continent) return { type: 'out_of_scope', country: exactByName };
     if (alreadyEntered.includes(exactByName.name)) {
       return { type: 'duplicate', country: exactByName };
     }
@@ -53,7 +53,7 @@ export function matchCountry(
   const score = best.score ?? 1;
   const country = best.item.country;
 
-  if (continent && country.continent !== continent) return { type: 'none' };
+  if (continent && country.continent !== continent) return { type: 'out_of_scope', country };
 
   if (alreadyEntered.includes(country.name)) {
     return { type: 'duplicate', country };
