@@ -26,6 +26,78 @@
 - [x] Reveal screen — "Neither named" collapsible expander (continent-aware, collapsed by default)
 - [x] Game modes: Timed (adjustable timer) and Continent Sprint
 - [ ] Polish: animations, mobile keyboard handling
+- [x] Map Mode
+
+---
+
+## 7. Map Mode
+
+### Goal
+Add a **map toggle** that can be combined with any existing mode (Classic, Timed, Continent Sprint). When on, the world map is visible during each player's turn and countries fill in as they're named. Designed for younger players or learning — removes the memory challenge.
+
+### What changes
+
+**`types/index.ts`**
+- Add `mapMode?: boolean` to `GameState` (no change to `GameMode` — stays `'classic' | 'timed' | 'continent'`)
+
+**`lib/gameState.ts`**
+- Add `mapMode: false` to `DEFAULT_STATE`
+
+**`app/page.tsx`** (Start screen)
+- Add a map toggle (checkbox or pill toggle) below the mode selector
+- Label: "Show map during play"
+
+**`components/features/WorldMap.tsx`**
+- Add optional `variant?: 'reveal' | 'play'` prop (default `'reveal'`)
+- Add optional `continent?: Continent` prop (already exists; reuse for play variant)
+- In `'play'` variant:
+  - Simplified legend: "Named" / "Not yet" (no p1/p2/both distinction)
+  - Color logic: named countries → player color (`#3b82f6`), everything else → neither/outOfScope
+  - If `continent` is provided: zoom into that continent only (filtered geographies + per-continent projection config); otherwise full world
+- Per-continent projection configs (center + scale — will need visual tuning):
+
+| Continent | Center | Scale |
+|-----------|--------|-------|
+| Africa | [20, 0] | 250 |
+| Asia | [90, 30] | 180 |
+| Europe | [15, 55] | 400 |
+| North America | [-95, 40] | 250 |
+| South America | [-60, -15] | 280 |
+| Oceania | [145, -25] | 350 |
+
+**`app/play/page.tsx`**
+- When `state.mapMode`, render a compact WorldMap between the header and the input area
+- Pass `p1Countries={countries}`, `p2Countries={[]}`, `variant="play"`
+- Pass `continent={state.continent}` when in Continent Sprint so the map zooms in
+- Country list stays visible below input
+
+### Layout (map toggle on, play screen)
+```
+[Header — name + count (+ timer if timed)]
+[WorldMap — compact; full world or zoomed continent]
+[Input area]
+[Country list — scrollable]
+[Done button — sticky bottom]
+```
+
+### Decisions
+| Area | Decision | Alternatives | Reasoning |
+|------|----------|-------------|-----------|
+| Implementation | Toggle (boolean) not a 4th mode | 4th standalone mode | Can combine with Timed, Continent Sprint naturally |
+| Continent + Map | Zoom to continent only | Show full world with dimming | Better UX — focus is on the countries in play |
+| Full world + Map | Show full world map | n/a | Classic/Timed have no scope restriction |
+| P2 mystery | Map shows only current player's countries | Show all named so far | Maintains hidden-score principle between turns |
+| Legend | Simplified ("Named" / "Not yet") | Full p1/p2/both legend | During a single-player turn, multi-player legend is confusing |
+| Country list | Keep it visible | Hide list (map only) | List gives precise text confirmation; map gives spatial context |
+| Island nations | Accept some won't render at 110m res | Higher-res topojson | Scope creep; already a known backlog item |
+
+### Known risks
+- **Timed + Map on mobile**: timer + map + input + on-screen keyboard = cramped. Mitigate by capping map height (`max-h-48` or similar on small screens).
+- **Continent projection configs**: scale/center values need visual tuning per continent — build order should include a tuning pass.
+- **Oceania small islands**: many won't be visible at 110m resolution regardless of zoom.
+
+### Open Questions
+- None — scope is clear enough to build
 
 ---
 

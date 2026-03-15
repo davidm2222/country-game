@@ -2,9 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getGameState, setGameState, otherPlayer, playerName, playerCountries } from '@/lib/gameState';
+import dynamic from 'next/dynamic';
+import { getGameState, setGameState, playerName, playerCountries } from '@/lib/gameState';
 import { matchCountry } from '@/lib/matcher';
 import { GameState, MatchResult } from '@/types';
+
+const WorldMap = dynamic(() => import('@/components/features/WorldMap'), { ssr: false });
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -23,6 +26,7 @@ export default function PlayPage() {
   const [highlightDup, setHighlightDup] = useState<string | null>(null);
   const [shaking, setShaking] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [mapOverlayOpen, setMapOverlayOpen] = useState(false);
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleDoneRef = useRef<(() => void) | null>(null);
 
@@ -100,7 +104,6 @@ export default function PlayPage() {
     }
   }, [state, countries, router]);
 
-  // Keep ref in sync so the timer effect can call handleDone without stale closure
   useEffect(() => {
     handleDoneRef.current = handleDone;
   }, [handleDone]);
@@ -108,38 +111,10 @@ export default function PlayPage() {
   if (!state) return null;
 
   const name = playerName(state, state.currentPlayer);
+  const mapContinent = state.mode === 'continent' ? state.continent : undefined;
 
-  return (
-    <div className="min-h-dvh flex flex-col bg-white dark:bg-gray-900">
-      {/* Header */}
-      <header className="flex-none border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4">
-        <div className="flex items-center justify-between max-w-lg mx-auto">
-          <div>
-            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest font-medium">
-              Round {state.round} of 2
-              {state.mode === 'continent' && state.continent && (
-                <span className="ml-2 text-blue-500">· {state.continent}</span>
-              )}
-            </p>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
-              {name}&apos;s Turn
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            {timeLeft !== null && (
-              <span className={`text-xl font-bold tabular-nums ${
-                timeLeft <= 10 ? 'text-red-500' : timeLeft <= 30 ? 'text-orange-500' : 'text-gray-500'
-              }`}>
-                {formatTime(timeLeft)}
-              </span>
-            )}
-            <div className="text-2xl font-bold text-blue-600 tabular-nums">
-              {countries.length}
-            </div>
-          </div>
-        </div>
-      </header>
-
+  const inputPanel = (
+    <>
       {/* Input area */}
       <div className="flex-none px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-700 max-w-lg mx-auto w-full">
         <div className="flex gap-2">
@@ -167,7 +142,6 @@ export default function PlayPage() {
           </button>
         </div>
 
-        {/* Feedback messages */}
         <div className="mt-2 min-h-[2rem]">
           {feedback?.type === 'none' && (
             <p className="text-sm text-red-500">Not recognized — try again</p>
@@ -215,6 +189,101 @@ export default function PlayPage() {
         >
           I&apos;m Done ({countries.length} {countries.length === 1 ? 'country' : 'countries'})
         </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-dvh md:h-dvh flex flex-col bg-white dark:bg-gray-900">
+      {/* Mobile map overlay */}
+      {state.mapMode && mapOverlayOpen && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col md:hidden">
+          <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {name}&apos;s Map · {countries.length} named
+            </span>
+            <button
+              onClick={() => { setMapOverlayOpen(false); inputRef.current?.focus(); }}
+              className="text-gray-500 dark:text-gray-400 text-2xl leading-none px-1"
+              aria-label="Close map"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 flex items-center p-4 overflow-hidden">
+            <WorldMap
+              p1Countries={countries}
+              p2Countries={[]}
+              p1Name={name}
+              p2Name=""
+              continent={mapContinent}
+              variant="play"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="flex-none border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4">
+        <div className="flex items-center justify-between max-w-lg mx-auto md:max-w-none">
+          <div>
+            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest font-medium">
+              Round {state.round} of 2
+              {state.mode === 'continent' && state.continent && (
+                <span className="ml-2 text-blue-500">· {state.continent}</span>
+              )}
+            </p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+              {name}&apos;s Turn
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            {timeLeft !== null && (
+              <span className={`text-xl font-bold tabular-nums ${
+                timeLeft <= 10 ? 'text-red-500' : timeLeft <= 30 ? 'text-orange-500' : 'text-gray-500'
+              }`}>
+                {formatTime(timeLeft)}
+              </span>
+            )}
+            <div className="text-2xl font-bold text-blue-600 tabular-nums">
+              {countries.length}
+            </div>
+            {/* Map toggle button — mobile only */}
+            {state.mapMode && (
+              <button
+                onClick={() => setMapOverlayOpen(true)}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                aria-label="Show map"
+              >
+                🌍
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Body — two-column on desktop when map mode, single column otherwise */}
+      <div className={`flex-1 flex flex-col min-h-0 ${state.mapMode ? 'md:flex-row' : ''}`}>
+
+        {/* Map column — desktop only */}
+        {state.mapMode && (
+          <div className="hidden md:flex md:flex-[3] md:border-r border-gray-100 dark:border-gray-700 md:items-start md:p-6 md:pt-8">
+            <WorldMap
+              p1Countries={countries}
+              p2Countries={[]}
+              p1Name={name}
+              p2Name=""
+              continent={mapContinent}
+              variant="play"
+            />
+          </div>
+        )}
+
+        {/* Input + list + done column */}
+        <div className={`flex flex-col min-h-0 ${state.mapMode ? 'flex-1 md:flex-[2] md:overflow-y-auto' : 'flex-1'}`}>
+          {inputPanel}
+        </div>
+
       </div>
     </div>
   );

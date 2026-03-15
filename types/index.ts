@@ -23,6 +23,7 @@ export interface GameState {
   mode: GameMode;
   timerSeconds?: number;      // timed mode only
   continent?: Continent;      // continent sprint only
+  mapMode?: boolean;          // show map during play
 }
 
 export type MatchResult =

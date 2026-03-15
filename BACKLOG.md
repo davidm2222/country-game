@@ -1,7 +1,7 @@
 # Country Name Battle — Backlog
 
 ## 💡 Game Mode Ideas
-- **Map Mode (easy)** — The world map is visible during play and countries fill in as you name them. Removes the memory challenge; good for younger players or learning.
+- ~~**Map Mode**~~ — ✅ Shipped. Toggle on start screen; full world for Classic/Timed, zoomed continent for Continent Sprint. Countries fill in as named during play.
 - **Head-to-Head Live** — Both players simultaneously; first to name a country claims it. (v2, requires online multiplayer)
 - **Capital Cities** — Name capitals instead of countries.
 - **Streak Mode** — Players alternate one at a time; wrong answer ends the streak.

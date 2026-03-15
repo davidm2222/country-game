@@ -24,15 +24,25 @@ const TERRITORY_TO_PARENT: Record<number, number> = {
   446: 156, // Macau → China
 };
 
+const CONTINENT_PROJECTION: Record<Continent, { center: [number, number]; scale: number }> = {
+  Africa:          { center: [20, 0],    scale: 250 },
+  Asia:            { center: [90, 30],   scale: 180 },
+  Europe:          { center: [15, 55],   scale: 400 },
+  'North America': { center: [-95, 40],  scale: 250 },
+  'South America': { center: [-60, -15], scale: 280 },
+  Oceania:         { center: [145, -25], scale: 350 },
+};
+
 interface WorldMapProps {
   p1Countries: string[];
   p2Countries: string[];
   p1Name: string;
   p2Name: string;
   continent?: Continent;
+  variant?: 'reveal' | 'play';
 }
 
-export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, continent }: WorldMapProps) {
+export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, continent, variant = 'reveal' }: WorldMapProps) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -47,8 +57,8 @@ export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, con
     p1: '#3b82f6',      // blue-500
     p2: '#f97316',      // orange-500
     both: '#22c55e',    // green-500
-    neither: isDark ? '#374151' : '#e5e7eb',     // gray-700 dark / gray-200 light
-    outOfScope: isDark ? '#1f2937' : '#f1f5f9',  // gray-800 dark / slate-100 light
+    neither: isDark ? '#374151' : '#e5e7eb',
+    outOfScope: isDark ? '#1f2937' : '#f1f5f9',
     stroke: '#ffffff',
   };
 
@@ -71,10 +81,15 @@ export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, con
     const n = TERRITORY_TO_PARENT[rawN] ?? rawN;
     const inP1 = p1Set.has(n);
     const inP2 = p2Set.has(n);
+
+    if (variant === 'play') {
+      // Single-player view: p1Set holds the current player's countries
+      return inP1 ? COLORS.p1 : COLORS.neither;
+    }
+
     if (inP1 && inP2) return COLORS.both;
     if (inP1) return COLORS.p1;
     if (inP2) return COLORS.p2;
-    // In continent sprint, countries outside the selected continent get a lighter shade
     if (continent) {
       const country = COUNTRY_BY_ISON.get(n);
       if (!country || country.continent !== continent) return COLORS.outOfScope;
@@ -82,39 +97,63 @@ export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, con
     return COLORS.neither;
   }
 
+  function shouldRenderGeo(geoId: string | number): boolean {
+    // In play variant with a continent, only render countries in that continent
+    if (variant !== 'play' || !continent) return true;
+    const rawN = Number(geoId);
+    const n = TERRITORY_TO_PARENT[rawN] ?? rawN;
+    const country = COUNTRY_BY_ISON.get(n);
+    return country?.continent === continent;
+  }
+
+  const projectionConfig = variant === 'play' && continent
+    ? CONTINENT_PROJECTION[continent]
+    : { center: [0, 10] as [number, number], scale: 140 };
+
   return (
     <div className="w-full">
       <ComposableMap
-        projectionConfig={{ scale: 140, center: [0, 10] }}
+        projectionConfig={projectionConfig}
         style={{ width: '100%', height: 'auto' }}
       >
         <Geographies geography={GEO_URL}>
           {({ geographies }) =>
-            geographies.map(geo => (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                fill={getColor(geo.id)}
-                stroke={COLORS.stroke}
-                strokeWidth={0.5}
-                style={{
-                  default: { outline: 'none' },
-                  hover: { outline: 'none' },
-                  pressed: { outline: 'none' },
-                }}
-              />
-            ))
+            geographies
+              .filter(geo => shouldRenderGeo(geo.id))
+              .map(geo => (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill={getColor(geo.id)}
+                  stroke={COLORS.stroke}
+                  strokeWidth={0.5}
+                  style={{
+                    default: { outline: 'none' },
+                    hover: { outline: 'none' },
+                    pressed: { outline: 'none' },
+                  }}
+                />
+              ))
           }
         </Geographies>
       </ComposableMap>
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3 justify-center mt-2 text-sm px-2">
-        <LegendItem color={COLORS.p1} label={`Only ${p1Name}`} />
-        <LegendItem color={COLORS.p2} label={`Only ${p2Name}`} />
-        <LegendItem color={COLORS.both} label="Both named" />
-        <LegendItem color={COLORS.neither} label="Neither" isDark={isDark} />
-        {continent && <LegendItem color={COLORS.outOfScope} label="Not in play" border isDark={isDark} />}
+        {variant === 'play' ? (
+          <>
+            <LegendItem color={COLORS.p1} label="Named" />
+            <LegendItem color={COLORS.neither} label="Not yet" isDark={isDark} />
+          </>
+        ) : (
+          <>
+            <LegendItem color={COLORS.p1} label={`Only ${p1Name}`} />
+            <LegendItem color={COLORS.p2} label={`Only ${p2Name}`} />
+            <LegendItem color={COLORS.both} label="Both named" />
+            <LegendItem color={COLORS.neither} label="Neither" isDark={isDark} />
+            {continent && <LegendItem color={COLORS.outOfScope} label="Not in play" border isDark={isDark} />}
+          </>
+        )}
       </div>
     </div>
   );

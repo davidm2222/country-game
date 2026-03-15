@@ -28,6 +28,7 @@ export default function StartPage() {
   const [mode, setMode] = useState<GameMode>('classic');
   const [timerSeconds, setTimerSeconds] = useState(120);
   const [continent, setContinent] = useState<Continent | null>(null);
+  const [mapMode, setMapMode] = useState(false);
 
   useEffect(() => {
     clearGameState();
@@ -49,6 +50,7 @@ export default function StartPage() {
       round: 1,
       firstPlayer: 1,
       mode,
+      mapMode,
       ...(mode === 'timed' && { timerSeconds }),
       ...(mode === 'continent' && continent && { continent }),
     });
@@ -177,6 +179,27 @@ export default function StartPage() {
               </div>
             </div>
           )}
+
+          {/* Map mode toggle */}
+          <div className="flex items-center justify-between py-1">
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Show map during play</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Countries fill in as you name them</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={mapMode}
+              onClick={() => setMapMode(m => !m)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
+                ${mapMode ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200
+                  ${mapMode ? 'translate-x-5' : 'translate-x-0'}`}
+              />
+            </button>
+          </div>
 
           <button
             onClick={handleStart}

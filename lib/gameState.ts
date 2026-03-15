@@ -11,6 +11,7 @@ const DEFAULT_STATE: GameState = {
   round: 1,
   firstPlayer: 1,
   mode: 'classic',
+  mapMode: false,
 };
 
 export function getGameState(): GameState {
