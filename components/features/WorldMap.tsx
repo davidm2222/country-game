@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import { COUNTRY_BY_ISON } from '@/lib/countries';
 import { Continent } from '@/types';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
-// Maps territory isoN → parent country isoN so territories get colored with their parent
 const TERRITORY_TO_PARENT: Record<number, number> = {
   304: 208, // Greenland → Denmark
   234: 208, // Faroe Islands → Denmark
@@ -33,6 +32,9 @@ const CONTINENT_PROJECTION: Record<Continent, { center: [number, number]; scale:
   Oceania:         { center: [145, -25], scale: 350 },
 };
 
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 8;
+
 interface WorldMapProps {
   p1Countries: string[];
   p2Countries: string[];
@@ -44,6 +46,8 @@ interface WorldMapProps {
 
 export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, continent, variant = 'reveal' }: WorldMapProps) {
   const [isDark, setIsDark] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [center, setCenter] = useState<[number, number]>([0, 0]);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -54,9 +58,9 @@ export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, con
   }, []);
 
   const COLORS = {
-    p1: '#3b82f6',      // blue-500
-    p2: '#f97316',      // orange-500
-    both: '#22c55e',    // green-500
+    p1: '#3b82f6',
+    p2: '#f97316',
+    both: '#22c55e',
     neither: isDark ? '#374151' : '#e5e7eb',
     outOfScope: isDark ? '#1f2937' : '#f1f5f9',
     stroke: '#ffffff',
@@ -83,7 +87,6 @@ export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, con
     const inP2 = p2Set.has(n);
 
     if (variant === 'play') {
-      // Single-player view: p1Set holds the current player's countries
       return inP1 ? COLORS.p1 : COLORS.neither;
     }
 
@@ -98,7 +101,6 @@ export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, con
   }
 
   function shouldRenderGeo(geoId: string | number): boolean {
-    // In play variant with a continent, only render countries in that continent
     if (variant !== 'play' || !continent) return true;
     const rawN = Number(geoId);
     const n = TERRITORY_TO_PARENT[rawN] ?? rawN;
@@ -110,33 +112,89 @@ export default function WorldMap({ p1Countries, p2Countries, p1Name, p2Name, con
     ? CONTINENT_PROJECTION[continent]
     : { center: [0, 10] as [number, number], scale: 140 };
 
+  function handleZoomIn() {
+    setZoom(z => Math.min(z * 2, MAX_ZOOM));
+  }
+
+  function handleZoomOut() {
+    setZoom(z => Math.max(z / 2, MIN_ZOOM));
+  }
+
+  function handleReset() {
+    setZoom(1);
+    setCenter([0, 0]);
+  }
+
   return (
     <div className="w-full">
-      <ComposableMap
-        projectionConfig={projectionConfig}
-        style={{ width: '100%', height: 'auto' }}
-      >
-        <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
-            geographies
-              .filter(geo => shouldRenderGeo(geo.id))
-              .map(geo => (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  fill={getColor(geo.id)}
-                  stroke={COLORS.stroke}
-                  strokeWidth={0.5}
-                  style={{
-                    default: { outline: 'none' },
-                    hover: { outline: 'none' },
-                    pressed: { outline: 'none' },
-                  }}
-                />
-              ))
-          }
-        </Geographies>
-      </ComposableMap>
+      {/* Map + zoom controls */}
+      <div className="relative">
+        <ComposableMap
+          projectionConfig={projectionConfig}
+          style={{ width: '100%', height: 'auto' }}
+        >
+          <ZoomableGroup
+            zoom={zoom}
+            center={center}
+            minZoom={MIN_ZOOM}
+            maxZoom={MAX_ZOOM}
+            onMoveEnd={({ zoom: z, coordinates }) => {
+              setZoom(z);
+              setCenter(coordinates);
+            }}
+          >
+            <Geographies geography={GEO_URL}>
+              {({ geographies }) =>
+                geographies
+                  .filter(geo => shouldRenderGeo(geo.id))
+                  .map(geo => (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill={getColor(geo.id)}
+                      stroke={COLORS.stroke}
+                      strokeWidth={0.5}
+                      style={{
+                        default: { outline: 'none' },
+                        hover: { outline: 'none' },
+                        pressed: { outline: 'none' },
+                      }}
+                    />
+                  ))
+              }
+            </Geographies>
+          </ZoomableGroup>
+        </ComposableMap>
+
+        {/* Zoom controls — top-right corner */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1">
+          <button
+            onClick={handleZoomIn}
+            disabled={zoom >= MAX_ZOOM}
+            className="w-7 h-7 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors flex items-center justify-center"
+            aria-label="Zoom in"
+          >
+            +
+          </button>
+          <button
+            onClick={handleZoomOut}
+            disabled={zoom <= MIN_ZOOM}
+            className="w-7 h-7 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors flex items-center justify-center"
+            aria-label="Zoom out"
+          >
+            −
+          </button>
+          {(zoom > 1) && (
+            <button
+              onClick={handleReset}
+              className="w-7 h-7 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 text-xs shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+              aria-label="Reset zoom"
+            >
+              ↺
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3 justify-center mt-2 text-sm px-2">
