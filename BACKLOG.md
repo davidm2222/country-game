@@ -1,5 +1,13 @@
 # Country Name Battle — Backlog
 
+## 🔒 Security
+
+Update Next.js (critical advisory)
+
+[GHSA-2464-fhr4-w9xw](https://github.com/advisories/GHSA-2464-fhr4-w9xw), published 2026-10-22: possible remote code execution through image optimization. This app is on 16.1.6; fixed in 16.4.1 and later.
+- [ ] Update `next` and `eslint-config-next` to the latest 16.x, run lint, tests and build, then push.
+- [ ] Run `npm audit` and handle anything else it finds.
+
 ## 💡 Game Mode Ideas
 - ~~**Map Mode**~~ — ✅ Shipped. Toggle on start screen; full world for Classic/Timed, zoomed continent for Continent Sprint. Countries fill in as named during play.
 - **Head-to-Head Live** — Both players simultaneously; first to name a country claims it. (v2, requires online multiplayer)
