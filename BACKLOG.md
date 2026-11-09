@@ -1,11 +1,13 @@
 # Country Name Battle — Backlog
 
-## 🔒 Security
+## Now
 
-Update Next.js (critical advisory)
+**Fix lint errors.** `npm run lint` fails with 4 errors (checked 2026-11-08 after the Next.js update). Each one calls `setState` directly inside a `useEffect`, which newer React rules flag. Builds and deploys aren't affected, but fix them so lint is a useful check again.
+- [ ] `app/handoff/page.tsx:15`, `app/play/page.tsx:36`, `app/reveal/page.tsx:21`, `components/features/WorldMap.tsx:54`. Often the value can be computed during render or read lazily in `useState(() => ...)` instead.
+- [ ] Confirm `npm run lint` passes.
 
-[GHSA-2464-fhr4-w9xw](https://github.com/advisories/GHSA-2464-fhr4-w9xw), published 2026-10-22: possible remote code execution through image optimization. This app is on 16.1.6; fixed in 16.4.1 and later.
-- [ ] Update `next` and `eslint-config-next` to the latest 16.x, run lint, tests and build, then push.
+**Security: dependency audit.**
+- [x] Update Next.js for [GHSA-2464-fhr4-w9xw](https://github.com/advisories/GHSA-2464-fhr4-w9xw) (critical RCE): 16.1.6 → 16.4.5, done 2026-11-08.
 - [ ] Run `npm audit` and handle anything else it finds.
 
 ## 💡 Game Mode Ideas
